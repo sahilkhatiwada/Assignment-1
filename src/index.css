@@ -4,8 +4,8 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: rgba(0, 0, 0, 0.87);
+  background-color: #fffcfc;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -23,9 +23,9 @@ a:hover {
 }
 
 body {
-  margin: 0;
-  display: flex;
+  display: block;
   place-items: center;
+  margin: 20px;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -65,4 +65,110 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.table-header .export-button {
+  margin: 10px;
+  background-color: #747bff;
+  color: white;
+
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  width: 200px;
+}
+
+.table-header .ok-button {
+  margin-left: 10px;
+  background-color: #3ec731;
+  color: white;
+
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.table-header .cancel-button {
+  margin: 10px;
+  background-color: #4b0d0d;
+  color: white;
+
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.table-header .export-success, .progress-indicator {
+  padding: 10px 20px;
+  margin: 10px;
+}
+.table {
+  width: 100%;
+}
+
+th, td {
+  text-align: left;
+  padding: 15px;
+  border: 1px solid #ccc;
+}
+
+.pagination {
+  margin-top: 40px;
+}
+.pagination .page-number {
+  margin: 5px;
+  padding: 10px;
+}
+
+.pagination .page-number:hover {
+  cursor: pointer;
+  background-color: #747bff;
+}
+
+.pagination .active {
+  background-color: #747bff;
+}
+
+
+.table-header .export-container {
+  position: relative;
+  display: flex;
+}
+
+.export-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #343764;
+  border: 1px solid #ccc;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  width: 100%;
+}
+
+.export-options li {
+  padding: 10px 20px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+}
+
+.export-options li:hover {
+  background-color: #747bff;
+}
+
+
+.select-column-container {
+  display: flex;
+  align-items: center;
+  margin: 10px;
+}
+
+.select-column-container label {
+  margin-right: 15px;
+  font-size: 16px;
 }

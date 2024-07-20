@@ -3,6 +3,10 @@ import { CSVLink } from 'react-csv';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import jsonData from './data/source.json';
+
+import PaginatedTable from './Table.jsx';
+
 
 const ExportButton = () => {
   const [exportFormat, setExportFormat] = useState('');
@@ -13,62 +17,29 @@ const ExportButton = () => {
   const [exportSuccess, setExportSuccess] = useState(false);
   const [downloadLink, setDownloadLink] = useState('');
 
-  const tableData = [
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      phone: '123-456-7890',
-      address: '123 Main St',
-      city: 'Anytown',
-      state: 'CA',
-      zip: '12345'
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      phone: '098-765-4321',
-      address: '456 Elm St',
-      city: 'Othertown',
-      state: 'NY',
-      zip: '67890'
-    },
-    {
-      id: 3,
-      name: 'Bob Johnson',
-      email: 'bob.johnson@example.com',
-      phone: '555-123-4567',
-      address: '789 Oak St',
-      city: 'Thistown',
-      state: 'TX',
-      zip: '34567'
-    },
-    {
-      id: 4,
-      name: 'Alice Brown',
-      email: 'alice.brown@example.com',
-      phone: '234-567-8901',
-      address: '901 Maple St',
-      city: 'Thatown',
-      state: 'FL',
-      zip: '56789'
-    }
-  ];
+  const [showOptions, setShowOptions] = useState(false);
+  
+  const tableData = jsonData;
 
-  const columns = [
-    { title: 'ID', dataIndex: 'id' },
-    { title: 'Name', dataIndex: 'name' },
-    { title: 'Email', dataIndex: 'email' },
-    { title: 'Phone', dataIndex: 'phone' },
-    { title: 'Address', dataIndex: 'address' },
-    { title: 'City', dataIndex: 'city' },
-    { title: 'State', dataIndex: 'state' },
-    { title: 'Zip', dataIndex: 'zip' }
-  ];
+  const [columns, setColumns] = useState([
+    { title: 'ID', dataIndex: 'id', visible: true },
+    { title: 'Name', dataIndex: 'name', visible: true  },
+    { title: 'Email', dataIndex: 'email', visible: true  },
+    { title: 'Contact', dataIndex: 'contact', visible: true  },
+    { title: 'Address', dataIndex: 'address', visible: true  },
+    { title: 'Capacity', dataIndex: 'capacity', visible: true  },
+    { title: 'Manager', dataIndex: 'manager', visible: true  },
+  ]);
 
-  const handleExportClick = (format) => {
-    setExportFormat(format);
+  // Toggle column visibility
+  const toggleColumnVisibility = (dataIndex) => {
+    setColumns(columns.map(col =>
+      col.dataIndex === dataIndex ? { ...col, visible: !col.visible } : col
+    ));
+  };
+  const handleExportClick = () => {
+    setShowOptions(!showOptions);
+    setExportFormat(exportFormat);
     setExportOptions({ onlyVisibleColumns: false });
   };
 
@@ -76,31 +47,94 @@ const ExportButton = () => {
     setExportOptions({ onlyVisibleColumns: event.target.checked });
   };
 
+  const getExportColumns = () => {
+    let visibleColumns = columns.filter(col => col.visible);
+    if (exportOptions.onlyVisibleColumns) {
+      return visibleColumns;
+    }
+
+    return columns
+  }
+
+  const getExportTableData = () => {
+    if (exportOptions.onlyVisibleColumns) {
+      return tableData.map(row => {
+        const formattedRow = {};
+        columns.forEach(col => {
+          if(col.visible) {
+            formattedRow[col.dataIndex] = row[col.dataIndex];
+          }
+        });
+        return formattedRow;
+      });
+    }
+    return tableData;
+  }
+
+  const exportAsCSV = () => {
+    const exportColumns = getExportColumns();
+    const exportTableData = getExportTableData();
+    
+    const csvData = exportTableData.map(row => exportColumns.map(col => row[col.dataIndex]));
+    csvData.unshift(exportColumns.map(col => col.title));
+
+    const csvBlob = new Blob([csvData.join('\n')], { type: 'text/csv' });
+    const csvUrl = URL.createObjectURL(csvBlob);
+    
+    setDownloadLink(csvUrl);
+  }
+  const exportAsPdf = () => {
+    const exportColumns = getExportColumns();
+    const exportTableData = getExportTableData();
+    
+    const doc = new jsPDF();
+    doc.autoTable({
+      head: [exportColumns.map(col => col.title)],
+      body: exportTableData.map(row => exportColumns.map(col => row[col.dataIndex]))
+    });
+    
+    const pdfBlob = new Blob([doc.output('blob')], { type: 'application/pdf' });
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    
+    setDownloadLink(pdfUrl);
+  }
+
+  const exportAsXlsx = () => {
+    const exportColumns = getExportColumns();
+    const exportTableData = getExportTableData();
+    
+    const worksheet = XLSX.utils.json_to_sheet(exportTableData, { header: exportColumns.map(col => col.dataIndex) });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+
+    const binaryString = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+    const buffer = new ArrayBuffer(binaryString.length);
+    const view = new Uint8Array(buffer);
+
+    for (let i = 0; i < binaryString.length; i++) {
+      view[i] = binaryString.charCodeAt(i) & 0xFF;
+    }
+    const xlsxBlob = new Blob([buffer], { type: 'application/octet-stream' });
+
+    const xlsxUrl = URL.createObjectURL(xlsxBlob);
+    setDownloadLink(xlsxUrl);
+  }
+
+  const handleOptionClick = (exportFormat) => {
+    setExporting(false);
+    setExportSuccess(false);
+    setShowOptions(!showOptions);
+    setExportFormat(exportFormat);
+  }
   const handleExport = () => {
     setExporting(true);
 
     if (exportFormat === 'CSV') {
-      const csvData = tableData.map(row => columns.map(col => row[col.dataIndex]));
-      csvData.unshift(columns.map(col => col.title));
-      const csvBlob = new Blob([csvData.join('\n')], { type: 'text/csv' });
-      const csvUrl = URL.createObjectURL(csvBlob);
-      setDownloadLink(csvUrl);
+      exportAsCSV();
     } else if (exportFormat === 'PDF') {
-      const doc = new jsPDF();
-      doc.autoTable({
-        head: [columns.map(col => col.title)],
-        body: tableData.map(row => columns.map(col => row[col.dataIndex]))
-      });
-      const pdfBlob = new Blob([doc.output('blob')], { type: 'application/pdf' });
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      setDownloadLink(pdfUrl);
+      exportAsPdf();
     } else if (exportFormat === 'XLSX') {
-      const worksheet = XLSX.utils.json_to_sheet(tableData, { header: columns.map(col => col.dataIndex) });
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-      const xlsxBlob = XLSX.write(workbook, { bookType: 'xlsx', type: 'blob' });
-      const xlsxUrl = URL.createObjectURL(xlsxBlob);
-      setDownloadLink(xlsxUrl);
+      exportAsXlsx();  
     }
 
     setExporting(false);
@@ -108,57 +142,95 @@ const ExportButton = () => {
   };
 
   return (
-    <div>
-      <button
-        className="export-button"
-        onClick={() => handleExportClick('')}
-      >
-        Export As...
-      </button>
-      {exportFormat && (
-        <div className="export-options-dialog">
-          <h2>Export Options</h2>
-          <label>
-            <input
-              type="checkbox"
-              checked={exportOptions.onlyVisibleColumns}
-              onChange={handleExportOptionsChange}
-            />
-            Export only visible columns
-          </label>
-          <button
-            className="ok-button"
-            onClick={handleExport}
-          >
-            Ok
-          </button>
-          <button
-            className="cancel-button"
-            onClick={() => setExportFormat('')}
-          >
-            Cancel
-          </button>
+    <div>  
+        <h3>Venues </h3>
+        <div className='table-header'> 
+          <div className='select-column-container'>
+              <span
+                className="select-columns-button"
+              >
+                Select Columns 
+              </span>
+            
+              <ul className='toggle-columns'>
+                {columns.map(col => (
+                  <span key={col.dataIndex} onClick={() => toggleColumnVisibility(col.dataIndex)}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={col.visible}
+                        onChange={() => toggleColumnVisibility(col.dataIndex)}
+                      />
+                      {col.title}
+                    </label>
+                  </span>
+              ))}
+              </ul>
+
+          </div>
+          <div className='export-container'>
+
+            {exportFormat && !exporting && !exportSuccess && (
+            <div className="export-options-dialog">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={exportOptions.onlyVisibleColumns}
+                  onChange={handleExportOptionsChange}
+                />
+                Export only visible columns
+              </label>
+              <button
+                className="ok-button"
+                onClick={handleExport}
+              >
+                Ok
+              </button>
+              <button
+                className="cancel-button"
+                onClick={() => setExportFormat('')}
+              >
+                Cancel
+              </button>
+            </div>
+            )}
+            {exporting && (
+              <div className="progress-indicator">
+                Exporting...
+              </div>
+            )}
+            {exportSuccess && (
+              <div className="export-success">
+                Export successful! <a href={downloadLink} download={`table_data.${exportFormat.toLowerCase()}`}>Download {exportFormat} file</a>
+              </div>
+            )}
+            {exportFormat === 'CSV' && (
+              <CSVLink
+                data={tableData}
+                headers={columns.map(col => ({ label: col.title, key: col.dataIndex }))}
+                filename="table_data.csv"
+                className="hidden"
+                target="_blank"
+              />
+            )}
+            <button
+              className="export-button"
+              onClick={() => handleExportClick()}
+            >
+              Export As{exportFormat ? ` ${exportFormat}` : '...'} 
+            </button>
+            {showOptions && (
+            
+              <ul className='export-options'>
+                  <li onClick={() =>handleOptionClick('CSV')}>CSV </li>
+                  <li onClick={() =>handleOptionClick('PDF')}>PDF </li>
+                  <li onClick={() =>handleOptionClick('XLSX')}>XLSX </li>
+              </ul>
+            )}
+          </div>
         </div>
-      )}
-      {exporting && (
-        <div className="progress-indicator">
-          Exporting...
-        </div>
-      )}
-      {exportSuccess && (
-        <div className="export-success">
-          Export successful! <a href={downloadLink} download={`table_data.${exportFormat.toLowerCase()}`}>Download {exportFormat} file</a>
-        </div>
-      )}
-      {exportFormat === 'CSV' && (
-        <CSVLink
-          data={tableData}
-          headers={columns.map(col => ({ label: col.title, key: col.dataIndex }))}
-          filename="table_data.csv"
-          className="hidden"
-          target="_blank"
-        />
-      )}
+        <PaginatedTable data={tableData} columns={columns} perPage={10} />
+      
     </div>
   );
 };
