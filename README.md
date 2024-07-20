@@ -1,4 +1,4 @@
-# setup instruction
+# Setup Instructions
 
 1. Clone this repo and install necessary dependencies.
 
