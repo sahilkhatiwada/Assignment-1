@@ -69,46 +69,52 @@ button:focus-visible {
 
 .table-header {
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   align-items: center;
 }
+
+
 .table-header .export-button {
   margin: 10px;
   background-color: #747bff;
   color: white;
-
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
   width: 200px;
 }
 
+
 .table-header .ok-button {
   margin-left: 10px;
   background-color: #3ec731;
   color: white;
-
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
 }
+
 
 .table-header .cancel-button {
   margin: 10px;
   background-color: #4b0d0d;
   color: white;
-
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
 }
+
 .table-header .export-success, .progress-indicator {
   padding: 10px 20px;
   margin: 10px;
 }
+
 .table {
   width: 100%;
+  overflow-y: scroll;
 }
+
 
 th, td {
   text-align: left;
@@ -116,9 +122,12 @@ th, td {
   border: 1px solid #ccc;
 }
 
+
 .pagination {
   margin-top: 40px;
 }
+
+
 .pagination .page-number {
   margin: 5px;
   padding: 10px;
@@ -164,6 +173,7 @@ th, td {
 
 .select-column-container {
   display: flex;
+  flex-direction: row;
   align-items: center;
   margin: 10px;
 }
@@ -171,4 +181,62 @@ th, td {
 .select-column-container label {
   margin-right: 15px;
   font-size: 16px;
+}
+
+
+/* Responsive */
+
+/* Extra small devices (phones, 600px and down) */
+@media only screen and (max-width: 600px) {
+  .table-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .toggle-columns{
+    padding-left: 0;
+  }
+  .select-column-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 10px;
+  }
+}
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) {
+
+
+}
+
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) {
+
+
+}
+
+/* Large devices (laptops/desktops, 992px and up) */
+@media only screen and (min-width: 992px) {
+
+
+}
+
+/* Extra large devices (large laptops and desktops, 1200px and up) */
+@media only screen and (min-width: 1200px) {
+  .table-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: justify;
+  }
+  .select-column-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 10px;
+  }
+
 }
